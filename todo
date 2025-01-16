@@ -1,0 +1,70 @@
+From rutgers:
+    skip over label junk at front of tape
+    verify recs in sequence and not duped
+    interpret SCD field when printing saveset name
+
+==> retrieve archive info!
+probably doesn't deal with holes in files
+'t' should display last writer string
+fix bogus atimes (1994)
+map writer name -> uid if possible and root.
+    have auxiliary table?
+fix argument parsing so can combine options.
+(need to skip over 2560 length (tape labels?) at front of first tape.)
+(files spanning tape bounds - partially done)
+(saveset index)
+(select by saveset#/filename)
+
+DONE:
+==> map tops-20 filenames to unixnames better, including directories:
+on 't' or v output, number the savesets and the files.
+==> select by archive info: saveset#/file#
+embedded null bytes
+match multiple patterns -crum
+match via regexp -crum
+skipped user info records should only be on verbose and say directory recs
+kludge the protections so remove x bits
+set utimes 
+
+CR stripping affects filelength, can leave getstring part way thru word
+    due to maxbytes exceeded. - fixed.
+preserve protections: use pcc20 mappings
+
+CR stripping - partial
+read from stdin
+default rmt0 -> rmt8
+minor speedups
+create filenames in lower case
+match in lower case
+use perror in punt()
+do directory listing on -t flag
+do extract on -x flag
+limit directory listing to matching files.
+check for write errors
+
+------------------------------------------------------------
+fdb scanner outline:
+Can all info be saved in slightly modified tar format?
+Would be nice...
+Here's the extra info needed:
+1 bit - archive
+1 bit - offline
+1 bit - invisible
+6 bits - bytesize
+short - generation number
+39 char - last writer 	    ===> Map to uid
+-----
+43 chars
+
+6 chars - archive tape #1
+6 chars - archive tape #2
+2 shorts - #1 saveset and file number
+2 shorts - #2 saveset and file number
+----
+20 ==> 63
+
+[2 shorts - #writes, #refs]
+[39 char - author name]
+----
+43 ==> 106
+

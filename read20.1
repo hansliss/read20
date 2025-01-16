@@ -1,0 +1,131 @@
+.TH READ20 1 "3/13/87"
+.SH NAME
+read20 \- read a tape produced by the TOPS-20 Dumper Program
+.SH SYNOPSIS
+.B read20
+\%[\-f tapefile] \%[\-t] \%[\-x] \%[-v] \%[\-c] \%[\-T] \%[\-g] \%[\-e expression] \%[-S ssnums...] \%[-F filenums...]
+.RI [ string ...]
+.SH DESCRIPTION
+.I Read20
+reads tapes produced by the TOPS-20 backup and archival program
+.IR DUMPER ,
+producing directory listings and extracting files.
+The
+.B \-t
+option specifies a directory listing,
+and the
+.B \-x
+option specifies extraction.  Both actions can be specified.
+.PP
+If no
+.IR string ,
+.IR \-e ,
+.BR \-F ,
+or
+.B \-S
+option is given, every file on the tape
+is processed.  Otherwise, every file with a name that either
+contains \fIstring ...\fR, matches (as in ed(1)) the regular expression
+.IR expression ,
+or is selected by the
+.B \-S
+and
+.B \-F
+options will be processed.
+The last two options are used to select files by saveset number
+and file number.  This is useful when extracting from an archive tape.
+The most-recently specified saveset number is associated with the
+specified file numbers.
+The TOPS-20 filenames are lowercased before any matching.
+Note that \fIstring\fR is
+.B not
+a generalized
+pattern, but is just a simple string that is matched against all the characters
+in the filenames.  Special characters (such as '\<' and '\>') must
+be quoted to get past the shell.
+.PP
+The UNIX filename of an extracted file is generated from the
+TOPS-20 filename by stripping off the device name, translating
+the TOPS-20 directory syntax to a relative directory in UNIX format,
+and stripping off the generation number, unless the
+.B \-g
+flag is given.
+Directories will be built as needed with protection 775,
+but any existing directory or its contents will not be changed
+(unless an extracted file replaces one of the same name).
+.PP
+The directory listing prints out for every file
+.IP
+-- a ``flags'' field which indicates if the file is archived (A),
+offline (O), or invisible (I)
+.br
+-- the size in TOPS-20 pages (for offline files the size before archiving)
+.br
+-- the number of bytes in the file
+.br
+-- the \fIbytesize\fR (number of bits per byte) of the file
+.br
+-- the octal TOPS-20 file protection
+.br
+-- the time and date the file was last modified
+.br
+-- the full pathname of the file.
+.PP
+If the
+.B \-v
+flag is given, two additional fields are printed at the left:
+.br
+-- the saveset number
+.br
+-- the file number
+.PP
+.I Read20
+only extracts text files and 8-bit files.
+In text files, unless the
+.B \-c
+flag is given, carriage returns preceding linefeeds are removed.
+The file length as printed by the `t' option is not
+adjusted to account for this.
+.I Read20
+decides whether or not a file is text by examining the
+\fIbytesize\fR of the file.  If the file has 7-bit bytes, it is assumed to
+be a text file.  If it has 8-bit bytes, it is extracted
+at 4 bytes/word, including null bytes.
+If the file has any other
+.IR bytesize ,
+requests to extract it are ignored.
+.PP
+Occasionally, text files have a \fIbytesize\fR of 36 or 0 instead of the proper
+\fIbytesize\fR of 7.
+The \-T flag forces these files to be considered as text files.
+.PP
+Alternate tape devices or files may be specified with the
+.B \-f
+flag.  The special filename `\-' signifies the standard input.
+.PP
+On non-Berkeley Unix systems, name collisions can occur
+when the first 14 characters of extracted files are
+the same.  If this is the case, use the
+.B \-n <number>
+option.  This will cause
+the Unix filenames to be numeric, starting with the number following the
+.BR \-n .
+The mapping from the original TOPS-20 to the numeric Unix filenames
+is written to the file
+.I `` Logfile ''
+in the current directory.
+.SH FILES
+/dev/rmt8 - default tapefile.
+.SH AUTHOR
+Jim Guyton, The Rand Corporation
+.br
+Jay Lepreau, University of Utah
+.SH BUGS
+Files which span tape boundaries are handled poorly.  To extract
+such a file, extract each piece and then combine the files under
+UNIX.
+
+Directory descriptor blocks on the tape are not interpreted.
+
+Offline files usually show up in directory listings with a zero
+.IR bytesize .

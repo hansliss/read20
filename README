@@ -1,0 +1,18 @@
+The file "updates" contains a msg which talks about some recent changes,
+but it needs a correction or two: the man page has mostly been updated
+(but it's ugly and needs re-writing), and although I haven't explicitly
+tested the new code as carefully as I'd like (yet), it's run for quite
+awhile w/o problems.
+
+Let me know of any bugs or fixes or improvements you make.
+The big one we never figured out is where the archive info is stored:
+the obvious stuff (the test code is still there) doesn't work.
+I've included the RCS file for your hacking and amusement.
+
+Jay Lepreau, Univ of Utah CS dept.
+lepreau@cs.utah.edu, decvax!utah-cs!lepreau, ucbvax!lepreau
+801-581-4285.
+
+=========
+Updated by Hans@Liss.pp.se 2025-01-16, to improve legibility, use more modern C and less K&R,
+and compile cleanly on modern systems.

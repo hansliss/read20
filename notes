@@ -1,0 +1,7 @@
+tapeno starts at 1.  Is valid in save set hdr recs
+ssno starts at 0?
+fileno starts at 1.  Is valid in filehdr and data recs.
+pageno starts at 0.  Is valid in filehdr and data recs.
+seq starts at 1.  It is per-tape, and increments on every single record on
+	the tape.
+

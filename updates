@@ -1,0 +1,34 @@
+Date: Mon, 23 Feb 87 08:04:11 MST
+From: lepreau (Jay Lepreau)
+Message-Id: <8702231504.AA12345@utah-cs.ARPA>
+To: opers
+Cc: unixsys
+Subject: read20 hackery
+Status: RO
+
+I put a new version of read20 out there, currently called Nread20.
+Some portions haven't been well tested since I didn't have
+an actual tape to spin, just a 3 MB extract-- let me know of funnies.
+Grant, would you test the null extraction on your files?
+
+There are these changes:
+1. Build directories on the fly and extract into them.
+    Currently directory protections are arbitrarily set to 775.
+2. Allow embedded nulls in text files.
+3. Select by saveset and file numbers (for future archive retrievals).
+    When listing, the saveset number and filenumber are printed on left
+    if -v (verbose) is on.
+4. Warn about partial files (those split across tapes).  Only warn on
+    extract, not on listing, unfortunately.
+(5. An earlier change: -g keeps generation numbers.)
+
+Note that with change (1) it is now impossible to extract a file into
+the current directory.
+
+Syntax for (3) is
+    [-S savesetnum] -F filenums....  [-S ssnum -F filenums...] ....
+savesetnum defaults to 0.  All three types of selection (pattern,
+regular expression, and ss/filenum pairs can be specified at once.
+
+Man page is not yet updated.
+
