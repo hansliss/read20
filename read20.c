@@ -21,6 +21,9 @@
 #include <errno.h>
 #include <ctype.h>
 #include <utime.h>
+#include <string.h>
+#include <strings.h>
+#include <time.h>
 #define _REGEX_RE_COMP
 #include <regex.h>
 #include "dump.h"
@@ -30,9 +33,8 @@
 
 #define LOGFILE "Logfile"		/* logfile should be changeable */
 
-char *ctime(), *index(), *rindex(), *strcpy(), *strcat();
-char *unixname();
-long getfield(), unixtime();
+char *unixname(char *name);
+long getfield(char *block, int wordoff, register int bitoff, register int bitlen), unixtime(char *block, int wordoff);
 
 int  fdTape;                    /* File handle for Dumper-20 format tape */
 char tapeblocka[TAPEBLK];        /* One logical record from tape */
@@ -73,7 +75,7 @@ char sunixname[300];
 struct want want[10000];				/* limited by 20000 char arglist */
 
 int cursswant;
-int compwant();
+int compwant(const void *vw1, const void *vw2);
 
 char **patterns = 0;     /* Filename match patterns */
 int numpats = 0;         /* Number of patterns */
