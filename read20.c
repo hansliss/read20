@@ -105,7 +105,10 @@ int main(int argc, char *argv[]) {
   int rtype;
   static char tmpbuf[256];
   int o;
-
+  int re_errcode;
+  char *str;
+  char *tok;
+  
   /* Do switch parsing */
   
   while ((o=getopt(argc, argv, "f:Ttxvgd:n:ce:S:F:"))!=-1) {
@@ -144,7 +147,7 @@ int main(int argc, char *argv[]) {
 	punt(0, "Only one regexp allowed");
       }
       expression = optarg;
-      int re_errcode = regcomp(&preg, expression, 0);
+      re_errcode = regcomp(&preg, expression, 0);
       if (re_errcode) {
 	regerror(re_errcode, &preg, tmpbuf, sizeof(tmpbuf));
 	punt(0, "regcomp: %s", tmpbuf);
@@ -154,8 +157,7 @@ int main(int argc, char *argv[]) {
       cursswant = atoi(optarg);
       break;
     case 'F':		/* selected file numbers */
-      char *str = optarg;
-      char *tok;
+      str = optarg;
       while ((tok = strtok(str, ",")) != NULL) {
 	want[nselect].ssnum = cursswant;
 	want[nselect].fnum = atoi(tok);

@@ -3,9 +3,8 @@
  * J.Lepreau 5/82
  */
 
-#include <string.h>
- 
-extern char *index();
+#include <string.h> 
+#include <strings.h>
 
 #define streqn(a,b,c)	(!strncmp(a,b,c))
 
