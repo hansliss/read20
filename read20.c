@@ -24,7 +24,6 @@
 #include <string.h>
 #include <strings.h>
 #include <time.h>
-#define _REGEX_RE_COMP
 #include <regex.h>
 #include "dump.h"
 #include "sindex.h"
@@ -74,15 +73,20 @@ char sunixname[300];
 
 struct want want[10000];				/* limited by 20000 char arglist */
 
-int cursswant;
+int cursswant=0;
 int compwant(const void *vw1, const void *vw2);
 
-char **patterns = 0;     /* Filename match patterns */
+char *patterns[128];     /* Filename match patterns */
 int numpats = 0;         /* Number of patterns */
-char *expression = 0;
-char *re_comp_error;     /* Error message from re_comp() */
-//extern char *re_comp();
 
+char *expression = 0;
+regex_t preg;
+
+void usage(char *progname) {
+  fprintf(stderr, "Usage: %s [-f tapefile] [-t] [-x] [-v] [-c] [-T] [-g] [-e expression]\n", progname);
+  fprintf(stderr, "\t[-S ssnums...] [-F filenums...]  [string...]\n");
+}
+ 
 /*
   read20  [-f tapefile] [-t] [-c] [-T] [-n number] pattern
 
@@ -99,17 +103,15 @@ int main(int argc, char *argv[]) {
   char	*tapeblock;
   int rc;
   int rtype;
+  static char tmpbuf[256];
+  int o;
 
   /* Do switch parsing */
-
-  while(argc>1 && argv[1][0] == '-') {
-    switch(argv[1][1]) {
+  
+  while ((o=getopt(argc, argv, "f:Ttxvgd:n:ce:S:F:"))!=-1) {
+    switch(o) {
     case 'f':
-      if (argc <= 2) {
-	punt(0, "Need filename after -f");
-      }
-      tape = argv[2];
-      argc--; argv++;
+      tape = optarg;
       break;
     case 'T':             /* Force text mode on "binary" files */
       textflg = 1;
@@ -127,67 +129,54 @@ int main(int argc, char *argv[]) {
       genflg++;
       break;
     case 'd':
-      debug = atoi(&argv[1][2]);
+      debug = atoi(optarg);
       fprintf(stderr, "Debug value set to %d\n", debug);
       break;
     case 'n':               /* numeric output filenames */
-      if (argc <= 2) {
-	punt(0, "Need number after -n");
-      }
-      number = atoi(argv[2]);         /* First file name */
+      number = atoi(optarg);         /* First file name */
       numflg = 1;
-      argc--; argv++;
       break;
     case 'c':		/* keep CR`s in CR/LF pairs */
       keepcr++;
       break;
     case 'e':               /* regular expression */
-      if (argc <= 2) {
-	punt(0, "Need expression after -e");
-      }
       if (expression) {
 	punt(0, "Only one regexp allowed");
       }
-      expression = argv[2];
-      if ((re_comp_error = re_comp(expression)) != 0) {
-	punt(0, "re_comp: %s", re_comp_error);
+      expression = optarg;
+      int re_errcode = regcomp(&preg, expression, 0);
+      if (re_errcode) {
+	regerror(re_errcode, &preg, tmpbuf, sizeof(tmpbuf));
+	punt(0, "regcomp: %s", tmpbuf);
       }
-      argc--; argv++;
       break;
     case 'S':		/* selected save set number */
-      if (argc <= 2) {
-	punt(0, "Need save set number after -S");
-      }
-      cursswant = atoi(argv[2]);
-      argc--; argv++;
+      cursswant = atoi(optarg);
       break;
     case 'F':		/* selected file numbers */
-      if (argc <= 2) {
-	punt(0, "Need file number(s) after -F");
-      }
-      for (argc -= 2, argv += 2;
-	   argc && isdigit(**argv);
-	   argc--, argv++, nselect++) {
+      char *str = optarg;
+      char *tok;
+      while ((tok = strtok(str, ",")) != NULL) {
 	want[nselect].ssnum = cursswant;
-	want[nselect].fnum = atoi(*argv);
+	want[nselect].fnum = atoi(tok);
+	str = NULL;
+	nselect++;
       }
-      argc += 2; argv -= 2;
       break;
     default:
-      punt(0, "unknown flag %s", argv[1]);
+      usage(argv[0]);
+      return -1;
     }
-    argc--;  argv++;
   }
 
   if (!xflg && !dodir) {
     punt(0, "Need either '-x' or '-t' option.");
   }
 
-  if (argc > 1) {
-    patterns = &argv[1];
-    numpats = argc - 1;
+  for (int i=optind; i<argc; i++) {
+    patterns[numpats++] = argv[i];
   }
-  doallflag = !(patterns || expression || nselect);
+  doallflag = !(numpats || expression || nselect);
   if (nselect) {
     qsort((char *)want, nselect, sizeof (struct want), compwant);
   }
@@ -425,7 +414,7 @@ void doFileHeader(char *block) {
   fpFile = NULL;
 
   if ( doallflag ||
-       (patterns && patternmatch()) ||
+       (numpats && patternmatch()) ||
        (expression && expmatch()) ||
        (nselect && fmatch()) ) {
     getfdbinfo(block);
@@ -507,10 +496,10 @@ int expmatch() {
   register int match;
 
   if (expression) {
-    if ((match = re_exec(topsname)) == -1) {
-      punt(0, "re_exec: internal error on %s", topsname);
+    if ((match = regexec(&preg, topsname, 0, NULL, 0)) == -1) {
+      punt(0, "regexec: internal error on %s", topsname);
     } else {
-      return (match);
+      return (!match);
     }
   }
   return (0);
