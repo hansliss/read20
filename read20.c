@@ -392,7 +392,7 @@ void doSaveset(char *block, int contflag) {
     // Formats older than 4 not supported, and 6 was the highest (TOPS-20 v6-7).
     // If you want to support older fmts, write the code. :-)
     fprintf (stderr, "Bad dumper tape format %012llo\n", ssfmt);
-    return -1;
+    exit(1);
   }
 
   if (verbose) {
